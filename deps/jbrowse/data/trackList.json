@@ -1,0 +1,26 @@
+{
+   "formatVersion" : 1,
+   "defaultTracks" : "strain1",
+   "tracks" : [
+      
+      {
+         "label" : "refseqs",
+         "key": "Reference sequence",
+         "storeClass" : "JBrowse/Store/SeqFeature/IndexedFasta",
+         "urlTemplate" : "x.fa",
+         "useAsRefSeqStore" : true,
+         "type" : "Sequence"
+      },
+
+      refSeqs="x.fa.fai",
+
+{
+         "label"         : "mysnps",
+         "key"           : "SNPs from VCF",
+         "storeClass"    : "JBrowse/Store/SeqFeature/VCFTabix",
+         "urlTemplate"   : "x.vcf.gz",
+         "type"          : "JBrowse/View/Track/CanvasVariants"
+      }
+
+   ]
+}

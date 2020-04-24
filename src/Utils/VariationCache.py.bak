@@ -1,0 +1,243 @@
+import requests
+import hashlib
+import binascii
+import uuid
+import os
+from pathlib import Path
+import subprocess
+from kbase_workspace_client import WorkspaceClient
+
+
+
+
+
+def md5_sum_local_file(fname):
+    md5hash = hashlib.md5()
+    with open(fname, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5hash.update(chunk)
+    return md5hash.hexdigest()
+
+
+
+
+def create_link (source_file, link_path):
+    os.link(source_file, link_path)
+ 
+
+
+def _find(name, path, md5):
+    #TODO: put some check for cache name
+    #TODO: Make sure md5 of local file matches server information
+    if  not os.path.isdir(path):
+       raise RuntimeError(f" Specified file server path does not exist:{path}")
+       return
+    else:
+        for root, dirs, files in os.walk(path):
+            if name in files:
+                resp = os.path.join(root, name)
+
+                if (md5_sum_local_file(resp) == md5):
+                    return (resp)
+    return
+
+def _mkdir_p(path):
+    """
+    _mkdir_p: make directory for given path
+    """
+    if not path:
+        raise RuntimeError(f"Specified path is not valid:{path}")
+        return
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+
+
+def is_gz_file(filepath):
+    with open(filepath, 'rb') as test_f:
+        return binascii.hexlify(test_f.read(2)) == b'1f8b'
+
+
+
+
+
+class VariationCache:
+
+    def __init__(self, url, token, file_server_root, variation_ref):
+        self._url = url.strip('/')
+        self._token = token
+        self._file_server = file_server_root
+        self._variation_ref = variation_ref
+        variation_ref_str = variation_ref.replace("/", "_")
+        self._variation_ref_str = variation_ref_str
+        
+
+
+    def create_dirs (self):
+
+        save_dir = os.path.join(self._file_server, str(uuid.uuid4()))
+        if not os.path.isdir(save_dir):
+            _mkdir_p (save_dir)
+        serve_dir = os.path.join(save_dir, self._variation_ref_str)
+        if not os.path.isdir(serve_dir):
+            _mkdir_p (serve_dir)
+        self._save_dir = save_dir
+        self._serve_dir = serve_dir
+
+     
+
+
+
+    
+    def download_shock_file(self, shock_id, dest_path):
+        """
+        Download a file from shock.
+        Args:
+            shock_id
+            md5
+            dest_path
+        Returns dict when the file finishes downloading
+        """
+        #_validate_file_for_writing(dest_path) #TODO validate
+        headers = {'Authorization': ('OAuth ' + self._token) if self._token else None}
+        # First, fetch some metadata about the file from shock
+        shock_url = self._url + '/shock-api'
+        node_url = shock_url + '/node/' + shock_id 
+
+        response = requests.get(node_url, headers=headers, allow_redirects=True)
+        if not response.ok:
+            raise RuntimeError(f"Error from shock: {response.text}")
+        metadata = response.json()
+        # Make sure the shock file is present and valid
+        if metadata['status'] == 401:
+            raise RuntimeError(f"Unauthorized access to shock file with ID:{ shock_id}")
+        if metadata['status'] == 404:
+            raise RuntimeError(f"Missing shock file with ID:{shock_id}")
+        # Fetch and stream the actual file to dest_path
+        with requests.get(node_url + '?download_raw',
+                          headers=headers, allow_redirects=True, stream=True) as resp:
+            with open(dest_path, 'wb') as fwrite:
+                for block in resp.iter_content(1024):
+                    fwrite.write(block)
+
+        return ({'id': shock_id, 'dest_path':dest_path} )
+
+
+
+    def download_from_caching_service(self, cache_id, dest_path):
+        """
+        Download a file from Cache
+        Args:
+            cache_id
+            md5
+            dest_path
+        Returns dict when the file finishes downloading
+        """
+
+        headers = {'Content-type': 'application/json', 'Authorization': self._token}
+        endpoint = self._url + 'cache/' + cache_id
+        req_call = requests.get(endpoint, headers=headers, stream=True)
+
+        if not os.path.isdir(destination):
+            dirpath = os.path.dirname(dest_path)
+            if not os.access(dirpath, os.W_OK):
+                raise RuntimeError('Please pass a writeable directory to download a cache file to.')
+        else:
+            if not os.access(destination, os.W_OK):
+                raise RuntimeError('Please pass a writeable directory to download a cache file to.')
+
+        if req_call.status_code == 200:
+            with open(destination, 'wb') as f:
+                for blob in req_call.iter_content():
+                    f.write(blob)
+                f.close()
+        elif req_call.status_code == 404:
+            raise RuntimeError('Endpoint url: ' + endpoint + ' does not exist.')
+        elif req_call.json().get('error'):
+            if req_call.json().get('error') == 'Cache ID not found':
+                raise RuntimeError('Cache ID is nonexistent')
+            else:
+                raise RuntimeError('An error with the HTTP request occurred see above error message.')
+        else:
+            raise RuntimeError('Unable to complete request action')
+
+        return ({'id': cache_id, 'dest_path':dest_path} )
+
+        
+
+    def create_cache (self, shock_handle):
+
+        shock_id = shock_handle['id']
+        md5 = shock_handle['remote_md5']
+        #link_path = self._serve_dir + "/" + shock_handle['file_name']
+
+        resp = None
+
+        cache_location = _find(shock_id, self._file_server, md5)
+        if cache_location is not None:
+            dest_path = cache_location
+            return ({"dest_path": dest_path, "is_cached": 1})
+        else:
+            #TODO: make sure there are no trailing / in file_server
+            self.create_dirs()
+            dest_path = self._save_dir  + "/" + shock_id
+            resp = self.download_shock_file(shock_id, dest_path)
+            return ({"dest_path": dest_path, "is_cached": 0})
+
+
+        #create_link (dest_path, link_path)
+       # return (link_path)
+        #return ({"dest":symbolic_link_path})
+
+
+
+
+            
+            
+
+
+    def create_cache_variation (self):
+
+        variation_ref = self._variation_ref
+        ws_url = self._url + "/" + "ws"
+
+        ws = WorkspaceClient(url=ws_url, token=self._token)
+        resp = None
+        variation_obj = ws.req("get_objects2", {'objects': [{"ref": variation_ref}]})['data'][0]['data']
+        #TODO: Fix the assembly ref typo
+        assembly_ref = variation_obj['assemby_ref']
+        assembly_obj = ws.req("get_objects2", {'objects': [{"ref": assembly_ref}]})['data'][0]['data']
+
+        variation_shock_handle = variation_obj['vcf_handle']
+        variation_index_shock_handle = variation_obj['vcf_index_handle']
+        assembly_shock_handle = assembly_obj["fasta_handle_info"]["handle"]
+
+
+
+        
+        vcf_info = self.create_cache (variation_shock_handle)
+
+        vcf_index_info = self.create_cache (variation_index_shock_handle)
+
+        assembly_info = self.create_cache (assembly_shock_handle) 
+
+        return "abc"
+
+        #write code for create links to gz filename and search to see if cache exists
+        #
+
+
+
+
+
+
+    #TODO: Write code to delete cache
+
+
+
