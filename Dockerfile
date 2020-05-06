@@ -22,7 +22,7 @@ RUN pip install flask-cors
 COPY . /kb/module
 
 RUN mkdir -p /kb/module/work
-ADD src/static /kb/module/work
+#ADD src/static /kb/module/work
 
 #See .env.example for template for .env
 #COPY .env.example /kb/module/.env
