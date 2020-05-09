@@ -9,6 +9,10 @@ from werkzeug.datastructures import Headers
 from re import findall
 from io import BytesIO
 import sys
+from urllib.parse import urlparse, urljoin
+from http.cookies import SimpleCookie
+
+
 
 # Set up server root path.
 # TODO: COnfirm that the file server location matches with
@@ -37,18 +41,41 @@ def streamed_proxy(shock_id):
     # TODO: This should come from the jbrowse itself.
     # TODO: So instead of putting it as /shock/shock_id
     # TODO: put server/shock/shock_id the whole path of the node
-    print ("################################################################")
-    server_base = 'https://appdev.kbase.us/services/shock-api/node/' + shock_id
-    headers = Headers()
-    status = None
+    cookie_rawdata = request.headers["Cookie"]
+    referring_url = request.headers["Referer"]
+
+    #Get shock url with node id
+    o = urlparse(referring_url)
+    server_url = o.scheme + "://" + o.netloc
+    node_url = server_url + "/services/shock-api/node/" + shock_id
+
+    #Get token
+    cookie = SimpleCookie()
+    cookie.load(cookie_rawdata)
+    cookies = {}
+    for key, morsel in cookie.items():
+        cookies[key] = morsel.value
+    token = cookies['kbase_session']
+
+                          
+    #Debugging statements
+    #TODO: Remove anything that shows token
+    print (request.headers)
+    print (referring_url)
+    print (cookie_rawdata)
+    print (server_url)
+    print (node_url)
+    print (token)
 
     # Get total size of shock node
-    resp = requests.get(server_base)
+    auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
+    resp = requests.get(node_url, headers=auth_headers, allow_redirects=True)
     rb = resp.json()
     size = rb['data']['file']['size']
-    print (server_base)
     print (size)
-    print (request.headers)
+
+    headers = Headers()
+    status = None
     # Handle byte range request properly
     if request.headers.has_key("Range"):
         status = 206
@@ -58,18 +85,14 @@ def streamed_proxy(shock_id):
             end = int(ranges[1])
 
             # Request from shock with required bytes for input shock node
-            server = server_base + '?download&seek=' + str(begin) + '&length=' + str(end - begin + 1)
-            r = requests.get(server, stream=True)
+            effective_node_url = node_url + '?download&seek=' + str(begin) + '&length=' + str(end - begin + 1)
+            r = requests.get(effective_node_url, headers=auth_headers, stream=True)
             print (r.headers)
-
             # TODO: Send streamed content
             # TODO: Handle cases where this byte request goes above a certain limit
             # TODO: Figuring this requires some  digging of Jbrowse code
             data = r.content
             print (r.apparent_encoding)
-            #data=BytesIO(r.content)
-            print ("---------")
-            print (sys.getsizeof(data))
             # Add headers
             if end >= size:
                 end = size - 1
@@ -88,9 +111,9 @@ def streamed_proxy(shock_id):
     # Needed to support smaller fasta index
     else:
         # server is the shock node url for downloading the whole file
-        server = server_base + "?download_raw"
+        effective_node_url = node_url + "?download_raw"
         # Make request
-        r = requests.get(server, stream=True)
+        r = requests.get(effective_node_url, headers=auth_headers, stream=True)
         # Add headers and status
         status = r.status_code
         headers.add('Content-Length', r.headers['Content-Length'])
