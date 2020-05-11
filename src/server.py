@@ -15,6 +15,7 @@ def get_node_url(path):
     return "https://" + path
 
 def get_token(request_header):
+    #TODO: Remove anything that shows token
     print (request_header)
     try:
         cookie_rawdata=request_header['Cookie'].split(";")
@@ -80,11 +81,6 @@ def streamed_proxy(path):
     else:
         token = token_resp
 
-#    return ("xxxxxx")
-    #TODO: Remove anything that shows token
-    print (request.headers)
-    print (node_url)
-    print (token)
 
     # Get total size of shock node
     auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
