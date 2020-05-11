@@ -27911,7 +27911,7 @@
                     case 1:
                         if (0 == t.avail_in) return n;
                         if (n = e, t.avail_in--, t.total_in++, i = 255 & t.next_in[t.next_in_index++], ((t.istate.method << 8) + i) % 31 != 0) {
-                            t.istate.mode = 13, t.msg = "incorrect header check 3333", t.istate.marker = 5;
+                            t.istate.mode = 13, t.msg = "incorrect header check", t.istate.marker = 5;
                             break
                         }
                         if (0 == (32 & i)) {
@@ -35323,7 +35323,7 @@
                 return i(t, s).then((function(i) {
                     var o = new Date;
                     if (206 !== i.status && 200 !== i.status) throw new Error("HTTP ".concat(i.status, " when fetching ").concat(t, " bytes ").concat(n, "-").concat(r));
-                    if (200 === i.status) throw new Error("HTTP ".concat(i.status, " when fetching#x1111x ").concat(t, " bytes ").concat(n, "-").concat(r));
+                    if (200 === i.status) throw new Error("HTTP ".concat(i.status, " when fetching ").concat(t, " bytes ").concat(n, "-").concat(r));
                     return (i.buffer ? i.buffer() : i.arrayBuffer().then((function(t) {
                         return e.from(t)
                     }))).then((function(t) {
@@ -37487,7 +37487,7 @@
                         break
                     }
                     if (n.flags = 0, n.head && (n.head.done = !1), !(1 & n.wrap) || (((255 & b) << 8) + (b >> 8)) % 31) {
-                        t.msg = "incorrect header checkxxxx", n.mode = d;
+                        t.msg = "incorrect header check", n.mode = d;
                         break
                     }
                     if (8 != (15 & b)) {
@@ -38689,8 +38689,7 @@
                         break
                     }
                     if (n.flags = 0, n.head && (n.head.done = !1), !(1 & n.wrap) || (((255 & b) << 8) + (b >> 8)) % 31) {
-                        console.log(n)
-                        t.msg = "incorrect header check 22222", n.mode = d;
+                        t.msg = "incorrect header check", n.mode = d;
                         break
                     }
                     if (8 != (15 & b)) {
@@ -52033,7 +52032,7 @@
                                                 buffer: e
                                             });
                                         case 18:
-                                            throw new Error("HTTP ".concat(f.status, " fetchin2xxxxg ").concat(this.url));
+                                            throw new Error("HTTP ".concat(f.status, " fetching ").concat(this.url));
                                         case 19:
                                         case "end":
                                             return t.stop()
@@ -52064,7 +52063,7 @@
                                                 t.next = 8;
                                                 break
                                             }
-                                            throw Object.assign(new Error("HTTP ".concat(c.status, " fetching3xxx ").concat(this.url)), {
+                                            throw Object.assign(new Error("HTTP ".concat(c.status, " fetching ").concat(this.url)), {
                                                 status: c.status
                                             });
                                         case 8:

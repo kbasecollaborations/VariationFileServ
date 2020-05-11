@@ -9,8 +9,37 @@ from werkzeug.datastructures import Headers
 from re import findall
 from io import BytesIO
 import sys
-from urllib.parse import urlparse, urljoin
-from http.cookies import SimpleCookie
+
+
+def get_node_url(path):
+    return "https://" + path
+
+def get_token(request_header):
+    print (request_header)
+    try:
+        cookie_rawdata=request_header['Cookie'].split(";")
+        print (cookie_rawdata)
+    except:
+        message = "Error:Missing Cookie in header {'Cookie': 'kbase_session=XXXXXXXXXX'}"
+        print (message)
+        return message
+
+    cookie_dict = {}
+    for c in cookie_rawdata:
+        key,value = c.strip().split("=")
+        cookie_dict[key]=value
+    if 'kbase_session' in cookie_dict:
+        token = cookie_dict['kbase_session']
+        if len(token.strip()) == 0:
+            message = "Error: empty token"
+            print(message)
+            return message
+        else:
+            return cookie_dict['kbase_session']
+    else:
+        message = "Error: Missing kbase_session in Cookie {'Cookie': 'kbase_session=XXXXXXXXXX'}"
+        print(message)
+        return message
 
 
 
@@ -18,15 +47,15 @@ from http.cookies import SimpleCookie
 # TODO: COnfirm that the file server location matches with
 # TODO: space that has enough space to host files
 FILE_SERVER_LOCATION = '/kb/module/work'
-#FILE_SERVER_LOCATION = '/Users/priyaranjan/kbasecode/VariationFileServ/test_local/workdir'
+FILE_SERVER_LOCATION = '../deps/'
 # Setup Flask app.
 app = Flask(__name__, static_folder=FILE_SERVER_LOCATION)
 app.debug = True
 CORS(app, supports_credentials=True)
 
 
-@app.route("/shock/<shock_id>")
-def streamed_proxy(shock_id):
+@app.route("/shock/<path:path>", methods=['GET', 'POST'])
+def streamed_proxy(path):
     """
     :param shock_id:
     :return:
@@ -41,29 +70,19 @@ def streamed_proxy(shock_id):
     # TODO: This should come from the jbrowse itself.
     # TODO: So instead of putting it as /shock/shock_id
     # TODO: put server/shock/shock_id the whole path of the node
-    cookie_rawdata = request.headers["Cookie"]
-    referring_url = request.headers["Referer"]
 
-    #Get shock url with node id
-    o = urlparse(referring_url)
-    server_url = o.scheme + "://" + o.netloc
-    node_url = server_url + "/services/shock-api/node/" + shock_id
+    node_url = get_node_url(path)
 
-    #Get token
-    cookie = SimpleCookie()
-    cookie.load(cookie_rawdata)
-    cookies = {}
-    for key, morsel in cookie.items():
-        cookies[key] = morsel.value
-    token = cookies['kbase_session']
+    token_resp = get_token(request.headers)
+    print ("token_resp is" + token_resp)
+    if token_resp.startswith("Error"):
+        return token_resp
+    else:
+        token = token_resp
 
-                          
-    #Debugging statements
+#    return ("xxxxxx")
     #TODO: Remove anything that shows token
     print (request.headers)
-    print (referring_url)
-    print (cookie_rawdata)
-    print (server_url)
     print (node_url)
     print (token)
 
@@ -71,6 +90,15 @@ def streamed_proxy(shock_id):
     auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
     resp = requests.get(node_url, headers=auth_headers, allow_redirects=True)
     rb = resp.json()
+    if rb["error"] is not None:
+        if rb["error"][0].startswith("Invalid authorization header"):
+            message="Error: Unauthorized token"
+            print (message)
+            return message
+        else:
+            message = "Error: uncaught error" + "\n".join(rb["error"])
+            print (message)
+            return message
     size = rb['data']['file']['size']
     print (size)
 
@@ -80,19 +108,19 @@ def streamed_proxy(shock_id):
     if request.headers.has_key("Range"):
         status = 206
         ranges = findall(r"\d+", request.headers["Range"])
+
         begin = int(ranges[0])
         if len(ranges) > 1:
             end = int(ranges[1])
 
             # Request from shock with required bytes for input shock node
             effective_node_url = node_url + '?download&seek=' + str(begin) + '&length=' + str(end - begin + 1)
+            print (effective_node_url)
             r = requests.get(effective_node_url, headers=auth_headers, stream=True)
-            print (r.headers)
-            # TODO: Send streamed content
             # TODO: Handle cases where this byte request goes above a certain limit
-            # TODO: Figuring this requires some  digging of Jbrowse code
+            # TODO: Looks like jbrowse handles it based properly on chunk size but still need to be sure
+            #  Figuring this requires some  digging of Jbrowse code
             data = r.content
-            print (r.apparent_encoding)
             # Add headers
             if end >= size:
                 end = size - 1
@@ -103,23 +131,23 @@ def streamed_proxy(shock_id):
             headers.add('Accept-Ranges', 'bytes')
             headers.add('Connection', 'keep-alive')
             headers.add('Cache-Control', 'public, max-age=43200')
-            print (headers)
             # Send response with headers
-            response = Response(data, status=status, headers=headers)
+            response = Response(r.iter_content(chunk_size=10*1024), status=status, headers=headers)
             return response
     # Handle non-byte range request
     # Needed to support smaller fasta index
     else:
         # server is the shock node url for downloading the whole file
         effective_node_url = node_url + "?download_raw"
+        print (effective_node_url)
         # Make request
         r = requests.get(effective_node_url, headers=auth_headers, stream=True)
         # Add headers and status
-        status = r.status_code
+        #print ("Status is" + r.status.code)
         headers.add('Content-Length', r.headers['Content-Length'])
         headers.add('Accept-Ranges', 'bytes')
         # Create streamed response
-        response = Response(r.iter_content(chunk_size=1024), status=status, headers=headers)
+        response = Response(r.iter_content(chunk_size=10*1024), status=status, headers=headers)
         return response
 
 
@@ -132,6 +160,7 @@ def static_proxy(path):
     :param path: path to the file on the system
     :return: content of the file
     """
+    #print (path)
     # send_static_file will guess the correct MIME type
     return app.send_static_file(path)
 
