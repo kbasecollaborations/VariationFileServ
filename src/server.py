@@ -55,7 +55,7 @@ app.debug = True
 CORS(app, supports_credentials=True)
 
 
-@app.route("/shock/<path:path>", methods=['GET', 'POST'])
+@app.route("/jbrowse_query/<path:path>", methods=['GET', 'POST'])
 def streamed_proxy(path):
     """
     :param shock_id:
