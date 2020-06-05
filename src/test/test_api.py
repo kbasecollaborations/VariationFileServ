@@ -22,6 +22,8 @@ cookie_info_bad = "abc=def"
 cookie_wrong_token = "kbase_session=" + "wrong_token"
 cookie_empty_token = "kbase_session=" + ""
 
+
+
 def make_request(url, headers):
     """Helper to make a JSON RPC request with the given workspace ref."""
     print (url)

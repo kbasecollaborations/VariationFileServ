@@ -15,11 +15,12 @@ def get_node_url(path):
     return "https://" + path
 
 def get_token(request_header):
-    #TODO: Remove anything that shows token
-    print (request_header)
+    # for debugging headers coming from the request
+    
+    #print (request_header)
     try:
         cookie_rawdata=request_header['Cookie'].split(";")
-        print (cookie_rawdata)
+        #print (cookie_rawdata)
     except:
         message = "Error:Missing Cookie in header {'Cookie': 'kbase_session=XXXXXXXXXX'}"
         print (message)
@@ -65,7 +66,9 @@ def streamed_proxy(path):
     returns required amount of bytes.
     :param shock_id:
     :return: bytes of data from shock id requested by Jbrowse
-    #TODO: Support authenticated requests when supported by HTML report
+    # token should be sent as part of cookie with kbase_session
+    # header={'Cookie': 'kbase_session=XXXXXXXXXXXXXXXXXX'}
+    # where XXXXXXXXXXXXXX is the token
     """
 
     # TODO: This should come from the jbrowse itself.
@@ -74,8 +77,9 @@ def streamed_proxy(path):
 
     node_url = get_node_url(path)
 
+    #print request.headers
     token_resp = get_token(request.headers)
-    print ("token_resp is" + token_resp)
+    #print ("token_resp is" + token_resp)
     if token_resp.startswith("Error"):
         return token_resp
     else:
