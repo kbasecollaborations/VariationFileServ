@@ -1,13 +1,22 @@
 Dyanmic server to support byte ranges for variation workflows
 
 
-To test use (Edit token information in .env)
+To test 
+</br>
+
+(copy .env.example to .env and update token information in .env)
+</br>
 <code>cp .env.example  .env</code>
+
+</br>
 <code>docker-compose up</code>
 
+</br>
 Run tests with (currently working for  appdev)
-<code>docker-compose run web test </code>
 
+</br>
+<code>docker-compose run web test </code>
+</br>
 
 
 ```python
