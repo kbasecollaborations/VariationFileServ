@@ -76,12 +76,16 @@ def streamed_proxy(path):
 
     # print request.headers
     print (request.headers)
-    token_resp = get_token(request.headers)
+    
+    #token_resp = get_token(request.headers)
     # print ("token_resp is" + token_resp)
-    if token_resp.startswith("Error"):
-        return token_resp
-    else:
-        token = token_resp
+    #if token_resp.startswith("Error"):
+    #    return token_resp
+    #else:
+    #    token = token_resp
+    
+    #TODO:revoke token
+    token = "OONOJM7VSVEYSONWGOIY6BVYOHCM3QST"
 
     # Get total size of shock node
     auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
