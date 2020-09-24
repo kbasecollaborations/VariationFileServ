@@ -75,6 +75,7 @@ def streamed_proxy(path):
     node_url = get_node_url(path)
 
     # print request.headers
+    print (request.headers)
     token_resp = get_token(request.headers)
     # print ("token_resp is" + token_resp)
     if token_resp.startswith("Error"):
