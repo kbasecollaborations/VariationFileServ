@@ -85,8 +85,8 @@ def streamed_proxy(path):
     #    token = token_resp
     
     #TODO:revoke token
-    #token = "OONOJM7VSVEYSONWGOIY6BVYOHCM3QST"
-    token = "MMAMJSBEYWWK3WLZQYDQYABEMVLVJVJT"
+    token = "OONOJM7VSVEYSONWGOIY6BVYOHCM3QST"
+    #token = "MMAMJSBEYWWK3WLZQYDQYABEMVLVJVJT"
     # Get total size of shock node
     auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
     resp = requests.get(node_url, headers=auth_headers, allow_redirects=True)
