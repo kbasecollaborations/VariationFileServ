@@ -40,6 +40,7 @@ cookie_wrong_token = "kbase_session=" + "wrong_token"
 cookie_empty_token = "kbase_session=" + ""
 
 
+
 def get_assembly_shock_node():
     '''
     Get shock id from assembly ref
@@ -72,14 +73,27 @@ def get_assembly_shock_node():
 def make_request(url, headers):
     """Helper to make a JSON RPC request with the given workspace ref."""
     print(url)
+    print ("##################header###################")
     print(headers)
     resp = requests.post(url, headers=headers)
     return resp.text
 
 
 class TestApi(unittest.TestCase):
+    def test_0_no_cookie_header(self):
+        '''
+        Test no cookie in header
+        '''
 
+        print("\n\nrunning test: no cookie in header.")
+        shock_node_url = get_assembly_shock_node()
+        url = base_url + "/jbrowse_query/" + shock_node_url
+        headers = {'Range': 'bytes:200-220'}
+        resp = make_request(url, headers)
+        self.assertTrue(resp.startswith("Error: Missing cookie in header"))
     # @unittest.skip('x')
+
+"""
     def test_1_download_selected_bytes(self):
         '''
         Get specified bytes from assembly node
@@ -148,3 +162,4 @@ class TestApi(unittest.TestCase):
     #  function
 
     # TODO: Update tests to include if the shock service itself is down
+"""

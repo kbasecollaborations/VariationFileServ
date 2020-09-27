@@ -15,7 +15,11 @@ def get_node_url(path):
 def get_token(request_header):
     # for debugging headers coming from the request
 
-    # print (request_header)
+    print (request_header)
+    if 'Cookie' not in request_header:
+        message="Error: Missing cookie in header"
+        print (message)
+        return message
     try:
         cookie_rawdata = request_header['Cookie'].split(";")
         # print (cookie_rawdata)
