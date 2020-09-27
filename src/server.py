@@ -45,8 +45,7 @@ def get_token(request_header):
 # Set up server root path.
 # TODO: COnfirm that the file server location matches with
 # TODO: space that has enough space to host files
-FILE_SERVER_LOCATION = '/kb/module/work'
-FILE_SERVER_LOCATION = '../deps/'
+FILE_SERVER_LOCATION = '/kb/module'
 # Setup Flask app.
 app = Flask(__name__, static_folder=FILE_SERVER_LOCATION)
 app.debug = True
@@ -73,20 +72,11 @@ def streamed_proxy(path):
     # TODO: put server/shock/shock_id the whole path of the node
 
     node_url = get_node_url(path)
-
-    # print request.headers
-    print (request.headers)
-    
-    #token_resp = get_token(request.headers)
-    # print ("token_resp is" + token_resp)
-    #if token_resp.startswith("Error"):
-    #    return token_resp
-    #else:
-    #    token = token_resp
-    
-    #TODO:revoke token
-    token = "OONOJM7VSVEYSONWGOIY6BVYOHCM3QST"
-    #token = "MMAMJSBEYWWK3WLZQYDQYABEMVLVJVJT"
+    token_resp = get_token(request.headers)
+    if token_resp.startswith("Error"):
+        return token_resp
+    else:
+        token = token_resp
     # Get total size of shock node
     auth_headers = {'Authorization': ('OAuth ' + token) if token else None}
     resp = requests.get(node_url, headers=auth_headers, allow_redirects=True)
