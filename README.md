@@ -13,14 +13,10 @@ So set the following variables for ci or appdev in .env file
 KBASE_ENDPOINT=https://appdev.kbase.us/services
 token=************
 
-
-
 </br>
 <code>docker-compose up</code>
-
 </br>
-Run tests with (currently working for  appdev)
-
+In a separate terminal run
 </br>
 <code>docker-compose run web test </code>
 </br>

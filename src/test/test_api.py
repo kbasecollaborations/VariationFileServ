@@ -93,7 +93,6 @@ class TestApi(unittest.TestCase):
         self.assertTrue(resp.startswith("Error: Missing cookie in header"))
     # @unittest.skip('x')
 
-"""
     def test_1_download_selected_bytes(self):
         '''
         Get specified bytes from assembly node
@@ -162,4 +161,3 @@ class TestApi(unittest.TestCase):
     #  function
 
     # TODO: Update tests to include if the shock service itself is down
-"""
