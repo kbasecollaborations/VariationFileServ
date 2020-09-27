@@ -24,7 +24,7 @@ def get_token(request_header):
         cookie_rawdata = request_header['Cookie'].split(";")
         # print (cookie_rawdata)
     except Exception:
-        message = "Error:Missing Cookie in header {'Cookie': 'kbase_session=XXXXXXXXXX'}"
+        message = "Error:Missing Cookie in header {'Cookie': 'kbase_session_backup=XXXXXXXXXX'}"
         print(message)
         return message
 
@@ -32,16 +32,16 @@ def get_token(request_header):
     for c in cookie_rawdata:
         key, value = c.strip().split("=")
         cookie_dict[key] = value
-    if 'kbase_session' in cookie_dict:
-        token = cookie_dict['kbase_session']
+    if 'kbase_session_backup' in cookie_dict:
+        token = cookie_dict['kbase_session_backup']
         if len(token.strip()) == 0:
             message = "Error: empty token"
             print(message)
             return message
         else:
-            return cookie_dict['kbase_session']
+            return cookie_dict['kbase_session_backup']
     else:
-        message = "Error: Missing kbase_session in Cookie {'Cookie': 'kbase_session=XXXXXXXXXX'}"
+        message = "Error: Missing kbase_session_backup in Cookie {'Cookie': 'kbase_session_backup=XXXXXXXXXX'}"
         print(message)
         return message
 
@@ -66,8 +66,8 @@ def streamed_proxy(path):
     returns required amount of bytes.
     :param shock_id:
     :return: bytes of data from shock id requested by Jbrowse
-    # token should be sent as part of cookie with kbase_session
-    # header={'Cookie': 'kbase_session=XXXXXXXXXXXXXXXXXX'}
+    # token should be sent as part of cookie with
+    # header={'Cookie': 'kbase_session_backup=XXXXXXXXXXXXXXXXXX'}
     # where XXXXXXXXXXXXXX is the token
     """
 

@@ -34,10 +34,10 @@ print("kbase end point is :" + KBASE_ENDPOINT + "\n")
 # The URL of the running server from within the docker container
 
 base_url = 'http://web:5000'
-cookie_info_good = "kbase_session=" + token
+cookie_info_good = "kbase_session_backup=" + token
 cookie_info_bad = "abc=def"
-cookie_wrong_token = "kbase_session=" + "wrong_token"
-cookie_empty_token = "kbase_session=" + ""
+cookie_wrong_token = "kbase_session_backup=" + "wrong_token"
+cookie_empty_token = "kbase_session_backup=" + ""
 
 
 
@@ -108,7 +108,7 @@ class TestApi(unittest.TestCase):
 
     def test_2_bad_Cookie(self):
         '''
-        Test for missing kbase_session in Cookie
+        Test for missing kbase_session_backup in Cookie
         '''
 
         print("\n\nrunning test: Missing kbase session in cookie ")
@@ -116,11 +116,11 @@ class TestApi(unittest.TestCase):
         url = base_url + "/jbrowse_query/" + shock_node_url
         headers = {'Cookie': cookie_info_bad, 'Range': 'bytes:200-220'}
         resp = make_request(url, headers)
-        self.assertTrue(resp.startswith("Error: Missing kbase_session in Cookie"))
+        self.assertTrue(resp.startswith("Error: Missing kbase_session_backup in Cookie"))
 
     def test_3_empty_token(self):
         '''
-        Test for missing kbase_session in Cookie
+        Test for missing kbase_session_backup in Cookie
         '''
 
         print("\n\nrunning test: Empty token in cookie ")
