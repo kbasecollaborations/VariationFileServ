@@ -10,7 +10,9 @@ To test
 
 The test uses public workspaces in appdev or ci
 So set the following variables for ci or appdev in .env file
+</br>
 KBASE_ENDPOINT=https://appdev.kbase.us/services
+</br>
 token=************
 
 </br>
